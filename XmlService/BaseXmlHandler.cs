@@ -281,5 +281,60 @@ namespace XmlService
                 return null;
             }
         }
+
+        #region AVIGAIL CHANGED 
+     
+      
+        public bool ProcssXml_V2()
+        {
+            // יצירת objRes אם הוא לא קיים
+            if (objRes == null) objRes = (DOMDocument)Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("2933BF90-7B36-11D2-B20E-00C04F983E60")));
+
+            _response = _processXml.ProcessXMLWithResponse(objDoc, objRes);
+
+            string text = ".xml";
+            string responsePath = null;
+
+            try
+            {
+                string directoryPath = GetDirectoryPath();
+                if (!string.IsNullOrEmpty(directoryPath))
+                {
+                    string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH-mm-ss-fff");
+                    string safeFileName = StringExtensionMethods.MakeSafeFilename(fileName, '_');
+
+                    string fullDocPath = Path.Combine(directoryPath, $"Doc_{safeFileName}{timestamp}{text}");
+                    objDoc.save(fullDocPath);
+
+                    responsePath = Path.Combine(directoryPath, $"Res_{safeFileName}{timestamp}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLogFile(ex);
+            }
+
+            _succes = _response.Length == 0;
+
+            try
+            {
+                if (!_succes && !string.IsNullOrEmpty(responsePath))
+                {
+                    objRes.save($"{responsePath}_ERROR.xml");
+                }
+                else if (!string.IsNullOrEmpty(responsePath))
+                {
+                    objRes.save($"{responsePath}{text}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLogFile(ex);
+            }
+
+            return _succes;
+        }
+
+        #endregion
     }
 }
